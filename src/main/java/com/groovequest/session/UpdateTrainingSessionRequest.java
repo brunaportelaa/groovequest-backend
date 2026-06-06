@@ -24,6 +24,14 @@ public class UpdateTrainingSessionRequest {
     @Size(max = 500, message = "Notes must not exceed 500 characters.")
     private String notes;
 
+    public UpdateTrainingSessionRequest(LocalDate date, Integer durationMinutes, TrainingIntensity intensity, DanceSkill skill, String notes) {
+        this.date = date;
+        this.durationMinutes = durationMinutes;
+        this.intensity = intensity;
+        this.skill = skill;
+        this.notes = notes;
+    }
+
     public LocalDate getDate() {
         return date;
     }

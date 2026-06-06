@@ -1,5 +1,8 @@
 package com.groovequest.skill;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
 public class SkillLevelService {
 
     // XP required for the first level-up.
