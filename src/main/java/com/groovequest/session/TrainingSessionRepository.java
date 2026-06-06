@@ -12,5 +12,15 @@ public class TrainingSessionRepository implements PanacheRepository<TrainingSess
         return list("ORDER BY date DESC, id DESC");
     }
 
-    
+    public List<Object[]> sumXpGroupedBySkill() {
+        return getEntityManager()
+                .createQuery("""
+                        SELECT session.skill, SUM(session.xpGained)
+                        FROM TrainingSession session
+                        GROUP BY session.skill
+                        ORDER BY SUM(session.xpGained) DESC
+                        """, Object[].class)
+                .getResultList();
+    }
+
 }

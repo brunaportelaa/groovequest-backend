@@ -6,10 +6,19 @@ public class SkillProgressionResponse {
 
     private DanceSkill skill;
     private Long totalXp;
+    private Integer level;
+    private Long xpToNextLevel;
 
-    public SkillProgressionResponse(DanceSkill skill, Long totalXp) {
+    public SkillProgressionResponse(
+            DanceSkill skill,
+            Long totalXp,
+            Integer level,
+            Long xpToNextLevel
+    ) {
         this.skill = skill;
         this.totalXp = totalXp;
+        this.level = level;
+        this.xpToNextLevel = xpToNextLevel;
     }
 
     public DanceSkill getSkill() {
@@ -18,5 +27,13 @@ public class SkillProgressionResponse {
 
     public Long getTotalXp() {
         return totalXp;
+    }
+
+    public Integer getLevel() {
+        return level;
+    }
+
+    public Long getXpToNextLevel() {
+        return xpToNextLevel;
     }
 }
