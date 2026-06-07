@@ -51,7 +51,7 @@ public class CoachingInsightService {
 
         return Optional.of(new CoachingInsightResponse(
                 CoachingInsightType.CONSISTENCY,
-                "You trained on " + recentTrainingDays + " different days recently. Great consistency"
+                "You trained on " + recentTrainingDays + " different days recently. Great consistency."
         ));
     }
 

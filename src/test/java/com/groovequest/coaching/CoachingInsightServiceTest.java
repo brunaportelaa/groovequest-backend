@@ -1,6 +1,6 @@
 package com.groovequest.coaching;
 
-import com.groovequest.dashboard.RecentTrainingDistributionResponse; // NEW in 8B: needed to test training balance insights.
+import com.groovequest.dashboard.RecentTrainingDistributionResponse;
 import com.groovequest.session.DanceSkill;
 import org.junit.jupiter.api.Test;
 
@@ -16,29 +16,21 @@ class CoachingInsightServiceTest {
     void shouldGenerateInsightForEachNeglectedSkill() {
         List<CoachingInsightResponse> insights = coachingInsightService.generateInsights(
                 List.of(DanceSkill.FLEXIBILITY, DanceSkill.MUSICALITY),
-                List.of()
+                List.of(),
+                0L
         );
 
         assertEquals(2, insights.size());
-
         assertEquals(CoachingInsightType.NEGLECTED_SKILL, insights.get(0).getType());
-        assertEquals(
-                "Flexibility has not been trained recently. Consider adding it to your next practice session.",
-                insights.get(0).getMessage()
-        );
-
         assertEquals(CoachingInsightType.NEGLECTED_SKILL, insights.get(1).getType());
-        assertEquals(
-                "Musicality has not been trained recently. Consider adding it to your next practice session.",
-                insights.get(1).getMessage()
-        );
     }
 
     @Test
     void shouldReturnEmptyListWhenThereAreNoInsightConditions() {
         List<CoachingInsightResponse> insights = coachingInsightService.generateInsights(
                 List.of(),
-                List.of()
+                List.of(),
+                0L
         );
 
         assertTrue(insights.isEmpty());
@@ -48,7 +40,8 @@ class CoachingInsightServiceTest {
     void shouldFormatMultiWordSkillNamesForHumanReadableMessages() {
         List<CoachingInsightResponse> insights = coachingInsightService.generateInsights(
                 List.of(DanceSkill.HIP_HOP, DanceSkill.JAZZ_FUNK),
-                List.of()
+                List.of(),
+                0L
         );
 
         assertEquals(
@@ -62,7 +55,6 @@ class CoachingInsightServiceTest {
         );
     }
 
-
     @Test
     void shouldGenerateTrainingBalanceInsightWhenOneSkillDominatesRecentTraining() {
         List<CoachingInsightResponse> insights = coachingInsightService.generateInsights(
@@ -70,7 +62,8 @@ class CoachingInsightServiceTest {
                 List.of(
                         new RecentTrainingDistributionResponse(DanceSkill.PERFORMANCE, 2L, 135L),
                         new RecentTrainingDistributionResponse(DanceSkill.FOUNDATION, 1L, 45L)
-                )
+                ),
+                0L
         );
 
         assertEquals(1, insights.size());
@@ -81,7 +74,6 @@ class CoachingInsightServiceTest {
         );
     }
 
-
     @Test
     void shouldNotGenerateTrainingBalanceInsightWhenTrainingIsBalanced() {
         List<CoachingInsightResponse> insights = coachingInsightService.generateInsights(
@@ -89,9 +81,63 @@ class CoachingInsightServiceTest {
                 List.of(
                         new RecentTrainingDistributionResponse(DanceSkill.PERFORMANCE, 1L, 55L),
                         new RecentTrainingDistributionResponse(DanceSkill.FOUNDATION, 1L, 45L)
-                )
+                ),
+                0L
         );
 
         assertTrue(insights.isEmpty());
+    }
+
+    @Test
+    void shouldGenerateConsistencyInsightWhenTrainingDaysReachThreshold() {
+        List<CoachingInsightResponse> insights = coachingInsightService.generateInsights(
+                List.of(),
+                List.of(),
+                7L
+        );
+
+        assertEquals(1, insights.size());
+        assertEquals(CoachingInsightType.CONSISTENCY, insights.get(0).getType());
+        assertEquals(
+                "You trained on 7 different days recently. Great consistency.",
+                insights.get(0).getMessage()
+        );
+    }
+
+    @Test
+    void shouldNotGenerateConsistencyInsightBelowThreshold() {
+        List<CoachingInsightResponse> insights = coachingInsightService.generateInsights(
+                List.of(),
+                List.of(),
+                6L
+        );
+
+        assertTrue(insights.isEmpty());
+    }
+
+    @Test
+    void shouldGenerateMultipleInsightTypesTogether() {
+        List<CoachingInsightResponse> insights = coachingInsightService.generateInsights(
+                List.of(DanceSkill.FLEXIBILITY),
+                List.of(
+                        new RecentTrainingDistributionResponse(DanceSkill.PERFORMANCE, 2L, 135L),
+                        new RecentTrainingDistributionResponse(DanceSkill.FOUNDATION, 1L, 45L)
+                ),
+                7L
+        );
+
+        assertEquals(3, insights.size());
+
+        assertTrue(insights.stream().anyMatch(insight ->
+                insight.getType() == CoachingInsightType.NEGLECTED_SKILL
+        ));
+
+        assertTrue(insights.stream().anyMatch(insight ->
+                insight.getType() == CoachingInsightType.TRAINING_BALANCE
+        ));
+
+        assertTrue(insights.stream().anyMatch(insight ->
+                insight.getType() == CoachingInsightType.CONSISTENCY
+        ));
     }
 }

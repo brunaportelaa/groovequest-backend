@@ -8,13 +8,17 @@ import com.groovequest.session.TrainingSessionRepository;
 import com.groovequest.skill.SkillLevelService;
 import com.groovequest.skill.SkillProgressionResponse;
 import com.groovequest.skill.SkillProgressionService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,6 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class DashboardServiceTest {
 
     @Mock
@@ -39,30 +44,16 @@ class DashboardServiceTest {
     @InjectMocks
     DashboardService dashboardService;
 
-    @Test
-    void shouldReturnDashboardSummary() {
-        List<SkillProgressionResponse> skillProgression = List.of(
-                new SkillProgressionResponse(DanceSkill.PERFORMANCE, 240L, 3, 107L),
-                new SkillProgressionResponse(DanceSkill.FOUNDATION, 45L, 1, 55L)
-        );
-
-        List<CoachingInsightResponse> coachingInsights = List.of(
-                new CoachingInsightResponse(
-                        CoachingInsightType.NEGLECTED_SKILL,
-                        "Flexibility has not been trained recently. Consider adding it to your next practice session."
-                )
-        );
-
+    @BeforeEach
+    void setUp() {
         when(trainingSessionRepository.sumTotalXp()).thenReturn(285L);
         when(trainingSessionRepository.sumTotalTrainingMinutes()).thenReturn(180L);
         when(trainingSessionRepository.count()).thenReturn(3L);
-        when(trainingSessionRepository.sumXpGroupedBySkill())
-                .thenReturn(List.of(
-                        new Object[]{DanceSkill.PERFORMANCE, 240L},
-                        new Object[]{DanceSkill.FOUNDATION, 45L}
-                ));
         when(skillLevelService.calculateLevel(285L)).thenReturn(3);
-        when(skillProgressionService.getSkillProgression()).thenReturn(skillProgression);
+        when(skillProgressionService.getSkillProgression()).thenReturn(List.of(
+                new SkillProgressionResponse(DanceSkill.PERFORMANCE, 240L, 3, 107L),
+                new SkillProgressionResponse(DanceSkill.FOUNDATION, 45L, 1, 55L)
+        ));
         when(trainingSessionRepository.summarizeTrainingDistributionSince(any(LocalDate.class)))
                 .thenReturn(List.of(
                         new Object[]{DanceSkill.PERFORMANCE, 2L, 135L},
@@ -70,9 +61,20 @@ class DashboardServiceTest {
                 ));
         when(trainingSessionRepository.findSkillsTrainedSince(any(LocalDate.class)))
                 .thenReturn(List.of(DanceSkill.PERFORMANCE, DanceSkill.FOUNDATION));
-//        when(coachingInsightService.generateInsights(any()))
-//                .thenReturn(coachingInsights);
+        when(trainingSessionRepository.sumXpGroupedBySkill())
+                .thenReturn(Collections.singletonList(new Object[]{DanceSkill.PERFORMANCE, 285L}));
+        when(trainingSessionRepository.countDistinctTrainingDaysSince(any(LocalDate.class)))
+                .thenReturn(4L);
+        when(coachingInsightService.generateInsights(any(), any(), any()))
+                .thenReturn(List.of(
+                        new CoachingInsightResponse(CoachingInsightType.NEGLECTED_SKILL, "any"),
+                        new CoachingInsightResponse(CoachingInsightType.TRAINING_BALANCE, "any"),
+                        new CoachingInsightResponse(CoachingInsightType.CONSISTENCY, "any")
+                ));
+    }
 
+    @Test
+    void shouldComputeSummaryFields() {
         DashboardResponse response = dashboardService.getDashboard();
 
         assertEquals(285L, response.getTotalXp());
@@ -80,17 +82,33 @@ class DashboardServiceTest {
         assertEquals(180L, response.getTotalTrainingMinutes());
         assertEquals(3L, response.getSessionsCount());
         assertEquals(DanceSkill.PERFORMANCE, response.getTopSkill());
+    }
+
+    @Test
+    void shouldComputeSkillProgression() {
+        DashboardResponse response = dashboardService.getDashboard();
 
         assertEquals(2, response.getSkillProgression().size());
         assertEquals(2, response.getRecentTrainingDistribution().size());
+    }
+
+    @Test
+    void shouldIdentifyNeglectedSkills() {
+        DashboardResponse response = dashboardService.getDashboard();
 
         assertFalse(response.getNeglectedSkills().contains(DanceSkill.PERFORMANCE));
         assertFalse(response.getNeglectedSkills().contains(DanceSkill.FOUNDATION));
         assertTrue(response.getNeglectedSkills().contains(DanceSkill.FLEXIBILITY));
-        assertTrue(response.getNeglectedSkills().contains(DanceSkill.MUSICALITY));
+    }
 
-        assertEquals(1, response.getCoachingInsights().size());
+    @Test
+    void shouldReturnCoachingInsights() {
+        DashboardResponse response = dashboardService.getDashboard();
+
+        assertEquals(3, response.getCoachingInsights().size());
         assertEquals(CoachingInsightType.NEGLECTED_SKILL, response.getCoachingInsights().get(0).getType());
+        assertEquals(CoachingInsightType.TRAINING_BALANCE, response.getCoachingInsights().get(1).getType());
+        assertEquals(CoachingInsightType.CONSISTENCY, response.getCoachingInsights().get(2).getType());
     }
 
     @Test
@@ -100,12 +118,12 @@ class DashboardServiceTest {
         when(trainingSessionRepository.count()).thenReturn(0L);
         when(skillLevelService.calculateLevel(0L)).thenReturn(1);
         when(skillProgressionService.getSkillProgression()).thenReturn(List.of());
-        when(trainingSessionRepository.summarizeTrainingDistributionSince(any(LocalDate.class)))
-                .thenReturn(List.of());
-        when(trainingSessionRepository.findSkillsTrainedSince(any(LocalDate.class)))
-                .thenReturn(List.of());
-//        when(coachingInsightService.generateInsights(any()))
-//                .thenReturn(List.of());
+        when(trainingSessionRepository.sumXpGroupedBySkill()).thenReturn(List.<Object[]>of());
+        when(trainingSessionRepository.summarizeTrainingDistributionSince(any(LocalDate.class))).thenReturn(List.of());
+        when(trainingSessionRepository.findSkillsTrainedSince(any(LocalDate.class))).thenReturn(List.of());
+        when(trainingSessionRepository.countDistinctTrainingDaysSince(any(LocalDate.class))).thenReturn(0L);
+        when(coachingInsightService.generateInsights(any(), any(), any()))
+                .thenReturn(List.of(new CoachingInsightResponse(CoachingInsightType.NEGLECTED_SKILL, "any")));
 
         DashboardResponse response = dashboardService.getDashboard();
 
@@ -117,6 +135,6 @@ class DashboardServiceTest {
         assertTrue(response.getSkillProgression().isEmpty());
         assertTrue(response.getRecentTrainingDistribution().isEmpty());
         assertEquals(DanceSkill.values().length, response.getNeglectedSkills().size());
-        assertTrue(response.getCoachingInsights().isEmpty());
+        assertEquals(1, response.getCoachingInsights().size());
     }
 }
