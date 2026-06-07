@@ -3,6 +3,8 @@ package com.groovequest.dashboard;
 import com.groovequest.session.DanceSkill;
 import com.groovequest.session.TrainingSessionRepository;
 import com.groovequest.skill.SkillLevelService;
+import com.groovequest.skill.SkillProgressionResponse;
+import com.groovequest.skill.SkillProgressionService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -11,8 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,11 +25,19 @@ public class DashboardServiceTest {
     @Mock
     SkillLevelService skillLevelService;
 
+    @Mock
+    SkillProgressionService skillProgressionService;
+
     @InjectMocks
     DashboardService dashboardService;
 
     @Test
     void shouldReturnDashboardSummary() {
+        List<SkillProgressionResponse> skillProgression = List.of(
+                new SkillProgressionResponse(DanceSkill.PERFORMANCE, 240L, 3, 107L),
+                new SkillProgressionResponse(DanceSkill.FOUNDATION, 45L, 1, 55L)
+        );
+
         when(trainingSessionRepository.sumTotalXp()).thenReturn(285L);
         when(trainingSessionRepository.sumTotalTrainingMinutes()).thenReturn(180L);
         when(trainingSessionRepository.count()).thenReturn(3L);
@@ -38,6 +47,7 @@ public class DashboardServiceTest {
                         new Object[]{DanceSkill.FOUNDATION, 45L}
                 ));
         when(skillLevelService.calculateLevel(285L)).thenReturn(3);
+        when(skillProgressionService.getSkillProgression()).thenReturn(skillProgression);
 
         DashboardResponse response = dashboardService.getDashboard();
 
@@ -46,6 +56,9 @@ public class DashboardServiceTest {
         assertEquals(180L, response.getTotalTrainingMinutes());
         assertEquals(3L, response.getSessionsCount());
         assertEquals(DanceSkill.PERFORMANCE, response.getTopSkill());
+        assertEquals(240L, response.getSkillProgression().get(0).getTotalXp());
+        assertEquals(3, response.getSkillProgression().get(0).getLevel());
+        assertEquals(107L, response.getSkillProgression().get(0).getXpToNextLevel());
     }
 
     @Test
@@ -55,6 +68,7 @@ public class DashboardServiceTest {
         when(trainingSessionRepository.count()).thenReturn(0L);
         when(trainingSessionRepository.sumXpGroupedBySkill()).thenReturn(List.of());
         when(skillLevelService.calculateLevel(0L)).thenReturn(1);
+        when(skillProgressionService.getSkillProgression()).thenReturn(List.of());
 
         DashboardResponse response = dashboardService.getDashboard();
 
@@ -63,5 +77,6 @@ public class DashboardServiceTest {
         assertEquals(0L, response.getTotalTrainingMinutes());
         assertEquals(0L, response.getSessionsCount());
         assertNull(response.getTopSkill());
+        assertTrue(response.getSkillProgression().isEmpty());
     }
 }

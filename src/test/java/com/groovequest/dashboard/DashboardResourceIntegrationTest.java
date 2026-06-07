@@ -34,7 +34,8 @@ public class DashboardResourceIntegrationTest {
                 .body("dancerLevel", equalTo(1))
                 .body("totalTrainingMinutes", equalTo(0))
                 .body("sessionsCount", equalTo(0))
-                .body("topSkill", nullValue());
+                .body("topSkill", nullValue())
+                .body("skillProgression.size()", equalTo(0));
     }
 
     @Test
@@ -52,7 +53,16 @@ public class DashboardResourceIntegrationTest {
                 .body("dancerLevel", equalTo(3))
                 .body("totalTrainingMinutes", equalTo(180))
                 .body("sessionsCount", equalTo(3))
-                .body("topSkill", equalTo("PERFORMANCE"));
+                .body("topSkill", equalTo("PERFORMANCE"))
+                .body("skillProgression.size()", equalTo(2))
+                .body("skillProgression[0].skill", equalTo("PERFORMANCE"))
+                .body("skillProgression[0].totalXp", equalTo(240))
+                .body("skillProgression[0].level", equalTo(3))
+                .body("skillProgression[0].xpToNextLevel", equalTo(107))
+                .body("skillProgression[1].skill", equalTo("FOUNDATION"))
+                .body("skillProgression[1].totalXp", equalTo(45))
+                .body("skillProgression[1].level", equalTo(1))
+                .body("skillProgression[1].xpToNextLevel", equalTo(55));
     }
 
     private void createSession(
