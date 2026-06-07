@@ -14,6 +14,7 @@ public class DashboardResponse {
     private DanceSkill topSkill;
     private List<SkillProgressionResponse> skillProgression;
     private List<RecentTrainingDistributionResponse> recentTrainingDistribution;
+    private List<DanceSkill> neglectedSkills;
 
     public DashboardResponse(
             Long totalXp,
@@ -22,7 +23,8 @@ public class DashboardResponse {
             Long sessionsCount,
             DanceSkill topSkill,
             List<SkillProgressionResponse> skillProgression,
-            List<RecentTrainingDistributionResponse> recentTrainingDistribution
+            List<RecentTrainingDistributionResponse> recentTrainingDistribution,
+            List<DanceSkill> neglectedSkills
     ) {
         this.totalXp = totalXp;
         this.dancerLevel = dancerLevel;
@@ -31,6 +33,7 @@ public class DashboardResponse {
         this.topSkill = topSkill;
         this.skillProgression = skillProgression;
         this.recentTrainingDistribution = recentTrainingDistribution;
+        this.neglectedSkills = neglectedSkills;
     }
 
     public Long getTotalXp() {
@@ -59,5 +62,9 @@ public class DashboardResponse {
 
     public List<RecentTrainingDistributionResponse> getRecentTrainingDistribution() {
         return recentTrainingDistribution;
+    }
+
+    public List<DanceSkill> getNeglectedSkills() {
+        return neglectedSkills;
     }
 }

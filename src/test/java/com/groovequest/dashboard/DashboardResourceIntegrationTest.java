@@ -1,5 +1,6 @@
 package com.groovequest.dashboard;
 
+import com.groovequest.session.DanceSkill;
 import com.groovequest.session.TrainingSessionRepository;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -10,8 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
 
 @QuarkusTest
 public class DashboardResourceIntegrationTest {
@@ -38,7 +38,9 @@ public class DashboardResourceIntegrationTest {
                 .body("sessionsCount", equalTo(0))
                 .body("topSkill", nullValue())
                 .body("skillProgression.size()", equalTo(0))
-                .body("recentTrainingDistribution.size()", equalTo(0));
+                .body("recentTrainingDistribution.size()", equalTo(0))
+                .body("neglectedSkills.size()", equalTo(DanceSkill.values().length));
+
     }
 
     @Test
@@ -70,8 +72,42 @@ public class DashboardResourceIntegrationTest {
                 .body("recentTrainingDistribution[0].totalMinutes", equalTo(135))
                 .body("recentTrainingDistribution[1].skill", equalTo("FOUNDATION"))
                 .body("recentTrainingDistribution[1].sessionsCount", equalTo(1))
-                .body("recentTrainingDistribution[1].totalMinutes", equalTo(45));
+                .body("recentTrainingDistribution[1].totalMinutes", equalTo(45))
+                .body("neglectedSkills", not(hasItem("PERFORMANCE")))
+                .body("neglectedSkills", not(hasItem("FOUNDATION")))
+                .body("neglectedSkills", hasItem("FLEXIBILITY"));
     }
+
+   @Test
+   void shouldTreatSkillAsNeglectedWhenNotTrainedRecently() {
+        LocalDate today = LocalDate.now();
+
+       createSession(
+               today.minusDays(45).toString(),
+               90,
+               "HIGH",
+               "FLEXIBILITY",
+               "Old flexibility session."
+       );
+
+       given()
+               .when()
+               .get("/api/dashboard")
+               .then()
+               .statusCode(200)
+
+               //Making sure session exists in database.
+               .body("totalXp", equalTo(180))
+               .body("totalTrainingMinutes", equalTo(90))
+               .body("sessionsCount", equalTo(1))
+               .body("topSkill", equalTo("FLEXIBILITY"))
+
+               //But recent distribution ignores it
+               .body("recentTrainingDistribution.size()", equalTo(0))
+
+                //And is displayed in neglected skills.
+               .body("neglectedSkills", hasItem("FLEXIBILITY"));
+   }
 
     private void createSession(
             String date,

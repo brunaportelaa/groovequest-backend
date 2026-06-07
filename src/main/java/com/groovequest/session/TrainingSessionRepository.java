@@ -59,4 +59,15 @@ public class TrainingSessionRepository implements PanacheRepository<TrainingSess
                 .getResultList();
     }
 
+    public List<DanceSkill> findSkillsTrainedSince(LocalDate startDate) {
+        return getEntityManager()
+                .createQuery("""
+                    SELECT DISTINCT session.skill
+                    FROM TrainingSession session
+                    WHERE session.date >= :startDate
+                    """, DanceSkill.class)
+                .setParameter("startDate", startDate)
+                .getResultList();
+    }
+
 }

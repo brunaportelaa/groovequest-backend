@@ -1,5 +1,6 @@
 package com.groovequest.dashboard;
 
+import com.aayushatharva.brotli4j.common.annotations.Local;
 import com.groovequest.session.DanceSkill;
 import com.groovequest.session.TrainingSessionRepository;
 import com.groovequest.skill.SkillLevelService;
@@ -8,6 +9,8 @@ import com.groovequest.skill.SkillProgressionService;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @ApplicationScoped
@@ -39,7 +42,11 @@ public class DashboardService {
         List<SkillProgressionResponse> skillProgression = skillProgressionService.getSkillProgression();
         DanceSkill topSkill = findTopSkill();
 
-        List<RecentTrainingDistributionResponse> recentTrainingDistribution = getRecentTrainingDistribution();
+        LocalDate recentStartDate = LocalDate.now().minusDays(RECENT_DAYS_WINDOW);
+
+        List<RecentTrainingDistributionResponse> recentTrainingDistribution = getRecentTrainingDistribution(recentStartDate);
+
+        List<DanceSkill> neglectedSkills = findNeglectedSkills(recentStartDate);
 
         return new DashboardResponse(
                 totalXp,
@@ -48,7 +55,8 @@ public class DashboardService {
                 sessionCount,
                 topSkill,
                 skillProgression,
-                recentTrainingDistribution
+                recentTrainingDistribution,
+                neglectedSkills
         );
     }
 
@@ -62,9 +70,7 @@ public class DashboardService {
         return (DanceSkill) skillXpTotals.get(0)[0];
     }
 
-    private List<RecentTrainingDistributionResponse> getRecentTrainingDistribution(){
-        LocalDate startDate = LocalDate.now().minusDays(RECENT_DAYS_WINDOW);
-
+    private List<RecentTrainingDistributionResponse> getRecentTrainingDistribution(LocalDate startDate){
         return trainingSessionRepository
                 .summarizeTrainingDistributionSince(startDate)
                 .stream()
@@ -73,6 +79,13 @@ public class DashboardService {
                         (Long) row[1],
                         (Long) row[2]
                 ))
+                .toList();
+    }
+
+    private List<DanceSkill> findNeglectedSkills(LocalDate startDate) {
+        List<DanceSkill> skillsTrained = trainingSessionRepository.findSkillsTrainedSince(startDate);
+        return Arrays.stream(DanceSkill.values())
+                .filter(skill -> !skillsTrained.contains(skill))
                 .toList();
     }
 }

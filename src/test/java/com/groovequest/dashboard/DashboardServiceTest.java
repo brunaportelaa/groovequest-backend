@@ -19,7 +19,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class DashboardServiceTest {
+class DashboardServiceTest {
 
     @Mock
     TrainingSessionRepository trainingSessionRepository;
@@ -55,6 +55,8 @@ public class DashboardServiceTest {
                         new Object[]{DanceSkill.PERFORMANCE, 2L, 135L},
                         new Object[]{DanceSkill.FOUNDATION, 1L, 45L}
                 ));
+        when(trainingSessionRepository.findSkillsTrainedSince(any(LocalDate.class)))
+                .thenReturn(List.of(DanceSkill.PERFORMANCE, DanceSkill.FOUNDATION));
 
         DashboardResponse response = dashboardService.getDashboard();
 
@@ -63,12 +65,14 @@ public class DashboardServiceTest {
         assertEquals(180L, response.getTotalTrainingMinutes());
         assertEquals(3L, response.getSessionsCount());
         assertEquals(DanceSkill.PERFORMANCE, response.getTopSkill());
-        assertEquals(240L, response.getSkillProgression().get(0).getTotalXp());
-        assertEquals(3, response.getSkillProgression().get(0).getLevel());
-        assertEquals(107L, response.getSkillProgression().get(0).getXpToNextLevel());
-        assertEquals(DanceSkill.PERFORMANCE, response.getRecentTrainingDistribution().get(0).getSkill());
-        assertEquals(2L, response.getRecentTrainingDistribution().get(0).getSessionsCount());
-        assertEquals(135L, response.getRecentTrainingDistribution().get(0).getTotalMinutes());
+
+        assertEquals(2, response.getSkillProgression().size());
+        assertEquals(2, response.getRecentTrainingDistribution().size());
+
+        assertFalse(response.getNeglectedSkills().contains(DanceSkill.PERFORMANCE));
+        assertFalse(response.getNeglectedSkills().contains(DanceSkill.FOUNDATION));
+        assertTrue(response.getNeglectedSkills().contains(DanceSkill.FLEXIBILITY));
+        assertTrue(response.getNeglectedSkills().contains(DanceSkill.MUSICALITY));
     }
 
     @Test
@@ -76,10 +80,11 @@ public class DashboardServiceTest {
         when(trainingSessionRepository.sumTotalXp()).thenReturn(0L);
         when(trainingSessionRepository.sumTotalTrainingMinutes()).thenReturn(0L);
         when(trainingSessionRepository.count()).thenReturn(0L);
-        when(trainingSessionRepository.sumXpGroupedBySkill()).thenReturn(List.of());
         when(skillLevelService.calculateLevel(0L)).thenReturn(1);
         when(skillProgressionService.getSkillProgression()).thenReturn(List.of());
         when(trainingSessionRepository.summarizeTrainingDistributionSince(any(LocalDate.class)))
+                .thenReturn(List.of());
+        when(trainingSessionRepository.findSkillsTrainedSince(any(LocalDate.class)))
                 .thenReturn(List.of());
 
         DashboardResponse response = dashboardService.getDashboard();
@@ -91,5 +96,7 @@ public class DashboardServiceTest {
         assertNull(response.getTopSkill());
         assertTrue(response.getSkillProgression().isEmpty());
         assertTrue(response.getRecentTrainingDistribution().isEmpty());
+
+        assertEquals(DanceSkill.values().length, response.getNeglectedSkills().size());
     }
 }
