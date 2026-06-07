@@ -1,5 +1,6 @@
 package com.groovequest.dashboard;
 
+import com.groovequest.coaching.CoachingInsightResponse;
 import com.groovequest.session.DanceSkill;
 import com.groovequest.skill.SkillProgressionResponse;
 
@@ -15,6 +16,7 @@ public class DashboardResponse {
     private List<SkillProgressionResponse> skillProgression;
     private List<RecentTrainingDistributionResponse> recentTrainingDistribution;
     private List<DanceSkill> neglectedSkills;
+    private List<CoachingInsightResponse> coachingInsights;
 
     public DashboardResponse(
             Long totalXp,
@@ -24,7 +26,8 @@ public class DashboardResponse {
             DanceSkill topSkill,
             List<SkillProgressionResponse> skillProgression,
             List<RecentTrainingDistributionResponse> recentTrainingDistribution,
-            List<DanceSkill> neglectedSkills
+            List<DanceSkill> neglectedSkills,
+            List<CoachingInsightResponse> coachingInsights
     ) {
         this.totalXp = totalXp;
         this.dancerLevel = dancerLevel;
@@ -34,6 +37,7 @@ public class DashboardResponse {
         this.skillProgression = skillProgression;
         this.recentTrainingDistribution = recentTrainingDistribution;
         this.neglectedSkills = neglectedSkills;
+        this.coachingInsights = coachingInsights;
     }
 
     public Long getTotalXp() {
@@ -66,5 +70,9 @@ public class DashboardResponse {
 
     public List<DanceSkill> getNeglectedSkills() {
         return neglectedSkills;
+    }
+
+    public List<CoachingInsightResponse> getCoachingInsights() {
+        return coachingInsights;
     }
 }

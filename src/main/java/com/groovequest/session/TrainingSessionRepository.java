@@ -70,4 +70,15 @@ public class TrainingSessionRepository implements PanacheRepository<TrainingSess
                 .getResultList();
     }
 
+    public Long countDistinctTrainingDaysSince(LocalDate startDate) {
+        return getEntityManager()
+                .createQuery("""
+                    SELECT COUNT(DISTINCT session.date)
+                    FROM TrainingSession session
+                    WHERE session.date >= :startDate
+                    """, Long.class)
+                .setParameter("startDate", startDate)
+                .getSingleResult();
+    }
+
 }

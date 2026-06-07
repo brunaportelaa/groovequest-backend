@@ -1,6 +1,7 @@
 package com.groovequest.dashboard;
 
-import com.aayushatharva.brotli4j.common.annotations.Local;
+import com.groovequest.coaching.CoachingInsightResponse;
+import com.groovequest.coaching.CoachingInsightService;
 import com.groovequest.session.DanceSkill;
 import com.groovequest.session.TrainingSessionRepository;
 import com.groovequest.skill.SkillLevelService;
@@ -9,28 +10,31 @@ import com.groovequest.skill.SkillProgressionService;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 @ApplicationScoped
 public class DashboardService {
 
-    private static final int RECENT_DAYS_WINDOW = 30;
+    private static final int RECENT_ACTIVITY_DAYS = 30;
 
     private final TrainingSessionRepository trainingSessionRepository;
     private final SkillLevelService skillLevelService;
     private final SkillProgressionService skillProgressionService;
+    private final CoachingInsightService coachingInsightService;
 
     public DashboardService(
             TrainingSessionRepository trainingSessionRepository,
             SkillLevelService skillLevelService,
-            SkillProgressionService skillProgressionService
+            SkillProgressionService skillProgressionService,
+            CoachingInsightService coachingInsightService
     ) {
         this.trainingSessionRepository = trainingSessionRepository;
         this.skillLevelService = skillLevelService;
         this.skillProgressionService = skillProgressionService;
+        this.coachingInsightService = coachingInsightService;
     }
+
 
     public DashboardResponse getDashboard() {
         Long totalXp = trainingSessionRepository.sumTotalXp();
@@ -42,11 +46,18 @@ public class DashboardService {
         List<SkillProgressionResponse> skillProgression = skillProgressionService.getSkillProgression();
         DanceSkill topSkill = findTopSkill();
 
-        LocalDate recentStartDate = LocalDate.now().minusDays(RECENT_DAYS_WINDOW);
+        LocalDate recentStartDate = calculateRecentStartDate();
 
         List<RecentTrainingDistributionResponse> recentTrainingDistribution = getRecentTrainingDistribution(recentStartDate);
 
         List<DanceSkill> neglectedSkills = findNeglectedSkills(recentStartDate);
+        Long recentTrainingDays = trainingSessionRepository.countDistinctTrainingDaysSince(calculateRecentStartDate());
+
+        List<CoachingInsightResponse> coachingInsights = coachingInsightService.generateInsights(
+                neglectedSkills,
+                recentTrainingDistribution,
+                recentTrainingDays
+        );
 
         return new DashboardResponse(
                 totalXp,
@@ -56,7 +67,8 @@ public class DashboardService {
                 topSkill,
                 skillProgression,
                 recentTrainingDistribution,
-                neglectedSkills
+                neglectedSkills,
+                coachingInsights
         );
     }
 
@@ -88,4 +100,7 @@ public class DashboardService {
                 .filter(skill -> !skillsTrained.contains(skill))
                 .toList();
     }
-}
+
+    private LocalDate calculateRecentStartDate() {
+        return LocalDate.now().minusDays(RECENT_ACTIVITY_DAYS);
+    }}

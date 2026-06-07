@@ -1,5 +1,8 @@
 package com.groovequest.dashboard;
 
+import com.groovequest.coaching.CoachingInsightResponse;
+import com.groovequest.coaching.CoachingInsightService;
+import com.groovequest.coaching.CoachingInsightType;
 import com.groovequest.session.DanceSkill;
 import com.groovequest.session.TrainingSessionRepository;
 import com.groovequest.skill.SkillLevelService;
@@ -30,6 +33,9 @@ class DashboardServiceTest {
     @Mock
     SkillProgressionService skillProgressionService;
 
+    @Mock
+    CoachingInsightService coachingInsightService;
+
     @InjectMocks
     DashboardService dashboardService;
 
@@ -38,6 +44,13 @@ class DashboardServiceTest {
         List<SkillProgressionResponse> skillProgression = List.of(
                 new SkillProgressionResponse(DanceSkill.PERFORMANCE, 240L, 3, 107L),
                 new SkillProgressionResponse(DanceSkill.FOUNDATION, 45L, 1, 55L)
+        );
+
+        List<CoachingInsightResponse> coachingInsights = List.of(
+                new CoachingInsightResponse(
+                        CoachingInsightType.NEGLECTED_SKILL,
+                        "Flexibility has not been trained recently. Consider adding it to your next practice session."
+                )
         );
 
         when(trainingSessionRepository.sumTotalXp()).thenReturn(285L);
@@ -57,6 +70,8 @@ class DashboardServiceTest {
                 ));
         when(trainingSessionRepository.findSkillsTrainedSince(any(LocalDate.class)))
                 .thenReturn(List.of(DanceSkill.PERFORMANCE, DanceSkill.FOUNDATION));
+//        when(coachingInsightService.generateInsights(any()))
+//                .thenReturn(coachingInsights);
 
         DashboardResponse response = dashboardService.getDashboard();
 
@@ -73,6 +88,9 @@ class DashboardServiceTest {
         assertFalse(response.getNeglectedSkills().contains(DanceSkill.FOUNDATION));
         assertTrue(response.getNeglectedSkills().contains(DanceSkill.FLEXIBILITY));
         assertTrue(response.getNeglectedSkills().contains(DanceSkill.MUSICALITY));
+
+        assertEquals(1, response.getCoachingInsights().size());
+        assertEquals(CoachingInsightType.NEGLECTED_SKILL, response.getCoachingInsights().get(0).getType());
     }
 
     @Test
@@ -86,6 +104,8 @@ class DashboardServiceTest {
                 .thenReturn(List.of());
         when(trainingSessionRepository.findSkillsTrainedSince(any(LocalDate.class)))
                 .thenReturn(List.of());
+//        when(coachingInsightService.generateInsights(any()))
+//                .thenReturn(List.of());
 
         DashboardResponse response = dashboardService.getDashboard();
 
@@ -96,7 +116,7 @@ class DashboardServiceTest {
         assertNull(response.getTopSkill());
         assertTrue(response.getSkillProgression().isEmpty());
         assertTrue(response.getRecentTrainingDistribution().isEmpty());
-
         assertEquals(DanceSkill.values().length, response.getNeglectedSkills().size());
+        assertTrue(response.getCoachingInsights().isEmpty());
     }
 }

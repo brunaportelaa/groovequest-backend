@@ -39,7 +39,9 @@ public class DashboardResourceIntegrationTest {
                 .body("topSkill", nullValue())
                 .body("skillProgression.size()", equalTo(0))
                 .body("recentTrainingDistribution.size()", equalTo(0))
-                .body("neglectedSkills.size()", equalTo(DanceSkill.values().length));
+                .body("neglectedSkills.size()", equalTo(DanceSkill.values().length))
+                .body("coachingInsights.size()", equalTo(DanceSkill.values().length));
+
 
     }
 
@@ -75,7 +77,11 @@ public class DashboardResourceIntegrationTest {
                 .body("recentTrainingDistribution[1].totalMinutes", equalTo(45))
                 .body("neglectedSkills", not(hasItem("PERFORMANCE")))
                 .body("neglectedSkills", not(hasItem("FOUNDATION")))
-                .body("neglectedSkills", hasItem("FLEXIBILITY"));
+                .body("neglectedSkills", hasItem("FLEXIBILITY"))
+                .body("coachingInsights.size()", equalTo(DanceSkill.values().length - 2))
+                .body("coachingInsights.type", hasItem("NEGLECTED_SKILL"))
+                .body("coachingInsights.message", hasItem("Flexibility has not been trained recently. Consider adding" +
+                        " it to your next practice session."));
     }
 
    @Test
@@ -106,7 +112,8 @@ public class DashboardResourceIntegrationTest {
                .body("recentTrainingDistribution.size()", equalTo(0))
 
                 //And is displayed in neglected skills.
-               .body("neglectedSkills", hasItem("FLEXIBILITY"));
+               .body("neglectedSkills", hasItem("FLEXIBILITY"))
+               .body("coachingInsights.message", hasItem("Flexibility has not been trained recently. Consider adding it to your next practice session."));
    }
 
     private void createSession(
