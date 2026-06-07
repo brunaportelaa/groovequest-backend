@@ -3,6 +3,7 @@ package com.groovequest.session;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @ApplicationScoped
@@ -43,6 +44,19 @@ public class TrainingSessionRepository implements PanacheRepository<TrainingSess
                 .getSingleResult();
 
         return totalMinutes;
+    }
+
+    public List<Object[]> summarizeTrainingDistributionSince(LocalDate startDate) {
+        return getEntityManager()
+                .createQuery("""
+                    SELECT session.skill, COUNT(session), SUM(session.durationMinutes)
+                    FROM TrainingSession session
+                    WHERE session.date >= :startDate
+                    GROUP BY session.skill
+                    ORDER BY SUM(session.durationMinutes) DESC
+                    """, Object[].class)
+                .setParameter("startDate", startDate)
+                .getResultList();
     }
 
 }

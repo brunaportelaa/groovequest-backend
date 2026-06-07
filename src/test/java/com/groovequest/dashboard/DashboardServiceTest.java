@@ -11,9 +11,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -48,6 +50,11 @@ public class DashboardServiceTest {
                 ));
         when(skillLevelService.calculateLevel(285L)).thenReturn(3);
         when(skillProgressionService.getSkillProgression()).thenReturn(skillProgression);
+        when(trainingSessionRepository.summarizeTrainingDistributionSince(any(LocalDate.class)))
+                .thenReturn(List.of(
+                        new Object[]{DanceSkill.PERFORMANCE, 2L, 135L},
+                        new Object[]{DanceSkill.FOUNDATION, 1L, 45L}
+                ));
 
         DashboardResponse response = dashboardService.getDashboard();
 
@@ -59,6 +66,9 @@ public class DashboardServiceTest {
         assertEquals(240L, response.getSkillProgression().get(0).getTotalXp());
         assertEquals(3, response.getSkillProgression().get(0).getLevel());
         assertEquals(107L, response.getSkillProgression().get(0).getXpToNextLevel());
+        assertEquals(DanceSkill.PERFORMANCE, response.getRecentTrainingDistribution().get(0).getSkill());
+        assertEquals(2L, response.getRecentTrainingDistribution().get(0).getSessionsCount());
+        assertEquals(135L, response.getRecentTrainingDistribution().get(0).getTotalMinutes());
     }
 
     @Test
@@ -69,6 +79,8 @@ public class DashboardServiceTest {
         when(trainingSessionRepository.sumXpGroupedBySkill()).thenReturn(List.of());
         when(skillLevelService.calculateLevel(0L)).thenReturn(1);
         when(skillProgressionService.getSkillProgression()).thenReturn(List.of());
+        when(trainingSessionRepository.summarizeTrainingDistributionSince(any(LocalDate.class)))
+                .thenReturn(List.of());
 
         DashboardResponse response = dashboardService.getDashboard();
 
@@ -78,5 +90,6 @@ public class DashboardServiceTest {
         assertEquals(0L, response.getSessionsCount());
         assertNull(response.getTopSkill());
         assertTrue(response.getSkillProgression().isEmpty());
+        assertTrue(response.getRecentTrainingDistribution().isEmpty());
     }
 }

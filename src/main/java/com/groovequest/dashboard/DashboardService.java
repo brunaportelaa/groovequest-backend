@@ -7,10 +7,13 @@ import com.groovequest.skill.SkillProgressionResponse;
 import com.groovequest.skill.SkillProgressionService;
 import jakarta.enterprise.context.ApplicationScoped;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @ApplicationScoped
 public class DashboardService {
+
+    private static final int RECENT_DAYS_WINDOW = 30;
 
     private final TrainingSessionRepository trainingSessionRepository;
     private final SkillLevelService skillLevelService;
@@ -36,13 +39,16 @@ public class DashboardService {
         List<SkillProgressionResponse> skillProgression = skillProgressionService.getSkillProgression();
         DanceSkill topSkill = findTopSkill();
 
+        List<RecentTrainingDistributionResponse> recentTrainingDistribution = getRecentTrainingDistribution();
+
         return new DashboardResponse(
                 totalXp,
                 dancerLevel,
                 totalTrainingMinutes,
                 sessionCount,
                 topSkill,
-                skillProgression
+                skillProgression,
+                recentTrainingDistribution
         );
     }
 
@@ -54,5 +60,19 @@ public class DashboardService {
         }
 
         return (DanceSkill) skillXpTotals.get(0)[0];
+    }
+
+    private List<RecentTrainingDistributionResponse> getRecentTrainingDistribution(){
+        LocalDate startDate = LocalDate.now().minusDays(RECENT_DAYS_WINDOW);
+
+        return trainingSessionRepository
+                .summarizeTrainingDistributionSince(startDate)
+                .stream()
+                .map( row -> new RecentTrainingDistributionResponse(
+                        (DanceSkill) row[0],
+                        (Long) row[1],
+                        (Long) row[2]
+                ))
+                .toList();
     }
 }
