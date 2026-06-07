@@ -23,4 +23,26 @@ public class TrainingSessionRepository implements PanacheRepository<TrainingSess
                 .getResultList();
     }
 
+    public Long sumTotalXp() {
+        Long totalXp = getEntityManager()
+                .createQuery("""
+                        SELECT COALESCE(SUM(session.xpGained), 0)
+                        FROM TrainingSession session
+                        """, Long.class)
+                .getSingleResult();
+
+        return totalXp;
+    }
+
+    public Long sumTotalTrainingMinutes() {
+        Long totalMinutes = getEntityManager()
+                .createQuery("""
+                        SELECT COALESCE(SUM(session.durationMinutes), 0)
+                        FROM TrainingSession session
+                        """, Long.class)
+                .getSingleResult();
+
+        return totalMinutes;
+    }
+
 }
