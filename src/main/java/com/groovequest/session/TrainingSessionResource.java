@@ -1,5 +1,6 @@
 package com.groovequest.session;
 
+import com.groovequest.user.CurrentUser;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -15,14 +16,16 @@ import java.util.List;
 public class TrainingSessionResource {
 
     private final TrainingSessionService service;
+    private final CurrentUser currentUser;
 
-    public TrainingSessionResource(TrainingSessionService service) {
+    public TrainingSessionResource(TrainingSessionService service, CurrentUser currentUser) {
         this.service = service;
+        this.currentUser = currentUser;
     }
 
     @POST
     public Response create(@Valid CreateTrainingSessionRequest request) {
-        TrainingSessionResponse response = service.create(request);
+        TrainingSessionResponse response = service.create(request, currentUser.requireId());
 
         return Response.status(Response.Status.CREATED)
                 .entity(response)

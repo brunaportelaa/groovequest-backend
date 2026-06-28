@@ -20,13 +20,14 @@ public class TrainingSessionService {
     }
 
     @Transactional
-    public TrainingSessionResponse create(CreateTrainingSessionRequest request) {
+    public TrainingSessionResponse create(CreateTrainingSessionRequest request, Long userId) {
         int xpGained = xpCalculationService.calculate(
                 request.getDurationMinutes(),
                 request.getIntensity()
         );
 
         TrainingSession trainingSession = new TrainingSession(
+                userId,
                 request.getDate(),
                 request.getDurationMinutes(),
                 request.getIntensity(),

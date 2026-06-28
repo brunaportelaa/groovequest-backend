@@ -12,6 +12,9 @@ public class TrainingSession {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, updatable = false)
+    private Long userId;
+
     private LocalDate date;
 
     private Integer durationMinutes;
@@ -30,6 +33,7 @@ public class TrainingSession {
     }
 
     public TrainingSession(
+            Long userId,
             LocalDate date,
             Integer durationMinutes,
             TrainingIntensity intensity,
@@ -37,6 +41,7 @@ public class TrainingSession {
             String notes,
             Integer xpGained
     ) {
+        this.userId = userId;
         this.date = date;
         this.durationMinutes = durationMinutes;
         this.intensity = intensity;
@@ -87,5 +92,11 @@ public class TrainingSession {
 
     public Integer getXpGained() {
         return xpGained;
+    }
+
+    public Long getUserId() { return userId; }
+
+    public boolean isOwnedBy(Long userId) {
+        return this.userId.equals(userId);
     }
 }

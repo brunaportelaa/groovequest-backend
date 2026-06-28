@@ -1,5 +1,7 @@
 package com.groovequest.session;
 
+import com.groovequest.user.User;
+import com.groovequest.user.UserRepository;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import jakarta.inject.Inject;
@@ -17,10 +19,15 @@ public class TrainingSessionResourceIntegrationTest {
     @Inject
     TrainingSessionRepository trainingSessionRepository;
 
+    @Inject
+    UserRepository userRepository;
+
     @BeforeEach
     @Transactional
     void cleanDatabase() {
         trainingSessionRepository.deleteAll();
+        userRepository.deleteAll();
+        userRepository.persist(new User("tester@example.com", "test-hash", "user"));
     }
 
     @Test
