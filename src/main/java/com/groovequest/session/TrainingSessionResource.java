@@ -1,5 +1,6 @@
 package com.groovequest.session;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -8,6 +9,7 @@ import jakarta.ws.rs.core.Response;
 import java.util.List;
 
 @Path("/api/sessions")
+@RolesAllowed("user")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class TrainingSessionResource {

@@ -3,6 +3,7 @@ package com.groovequest.dashboard;
 import com.groovequest.session.DanceSkill;
 import com.groovequest.session.TrainingSessionRepository;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.security.TestSecurity;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +18,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 
 @QuarkusTest
+@TestSecurity(user = "tester@example.com", roles = "user")
 class DashboardResourceIntegrationTest {
 
     @Inject

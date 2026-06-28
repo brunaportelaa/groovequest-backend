@@ -1,5 +1,6 @@
 package com.groovequest.skill;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
@@ -9,6 +10,7 @@ import java.awt.*;
 import java.util.List;
 
 @Path("/api/skills/progression")
+@RolesAllowed("user")
 @Produces(MediaType.APPLICATION_JSON)
 public class SkillProgressionResource {
 

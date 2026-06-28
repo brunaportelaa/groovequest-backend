@@ -121,4 +121,11 @@ public class AuthResourceIntegrationTest {
                 .when().post("/api/auth/login")
                 .then().statusCode(401);
     }
+
+    @Test
+    void shouldRejectUnauthenticatedAccessToSessionsWith401() {
+        given()
+                .when().get("/api/sessions")
+                .then().statusCode(401);
+    }
 }
