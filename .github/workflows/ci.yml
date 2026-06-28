@@ -20,11 +20,12 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Run tests
-        run: ./mvnw test
-
       - name: Generate JWT keys
         run: |
           openssl genrsa -out rsaPrivateKey.pem 2048
           openssl pkcs8 -topk8 -inform PEM -in rsaPrivateKey.pem -out src/main/resources/privateKey.pem -nocrypt
           openssl rsa -in rsaPrivateKey.pem -pubout -out src/main/resources/publicKey.pem
+
+      - name: Run tests
+        run: ./mvnw test
+
