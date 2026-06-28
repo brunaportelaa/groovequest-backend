@@ -75,4 +75,50 @@ public class AuthResourceIntegrationTest {
                 .then()
                 .statusCode(400);
     }
+
+    @Test
+    void shouldLoginWithValidCredentialsAndReturnAToken(){
+        String payload = """
+                { "email": "login@example.com", "password": "supersecret123" }
+                """;
+
+        given().contentType("application/json")
+                .body(payload)
+                .when().post("/api/auth/register")
+                .then().statusCode(201);
+
+        given().contentType("application/json")
+                .body(payload)
+                .when().post("api/auth/login")
+                .then()
+                .statusCode(200)
+                .body("token", notNullValue())
+                .body("tokenType", equalTo("Bearer"));
+    }
+
+    @Test
+    void shouldRejectWrongPasswordWith401() {
+        given().contentType("application/json")
+                .body("""
+                        { "email": "wrongpass@example.com", "password": "supersecret123" }
+                        """)
+                .when().post("/api/auth/register").then().statusCode(201);
+
+        given().contentType("application/json")
+                .body("""
+                        { "email": "wrongpass@example.com", "password": "WRONGpassword" }
+                        """)
+                .when().post("/api/auth/login")
+                .then().statusCode(401);
+    }
+
+    @Test
+    void shouldRejectUnknownEmailWith401() {
+        given().contentType("application/json")
+                .body("""
+                        { "email": "ghost@example.com", "password": "whatever123" }
+                        """)
+                .when().post("/api/auth/login")
+                .then().statusCode(401);
+    }
 }

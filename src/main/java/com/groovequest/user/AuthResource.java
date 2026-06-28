@@ -14,9 +14,11 @@ import jakarta.ws.rs.core.Response;
 public class AuthResource {
 
     private final UserService userService;
+    private final AuthenticationService authenticationService;
 
-    public AuthResource(UserService userService) {
+    public AuthResource(UserService userService, AuthenticationService authService) {
         this.userService = userService;
+        this.authenticationService = authService;
     }
 
     @POST
@@ -27,5 +29,12 @@ public class AuthResource {
         return Response.status(Response.Status.CREATED)
                 .entity(response)
                 .build();
+    }
+
+    @POST
+    @Path("/login")
+    public Response login(@Valid LoginRequest request) {
+        LoginResponse response = authenticationService.login(request);
+        return Response.ok(response).build();
     }
 }

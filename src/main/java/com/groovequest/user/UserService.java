@@ -1,6 +1,5 @@
 package com.groovequest.user;
 
-import io.quarkus.elytron.security.common.BcryptUtil;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
@@ -8,9 +7,11 @@ import jakarta.transaction.Transactional;
 public class UserService {
 
     private final UserRepository repository;
+    private final PasswordHasher passwordHasher;
 
-    public UserService(UserRepository repository) {
+    public UserService(UserRepository repository, PasswordHasher passwordHasher) {
         this.repository = repository;
+        this.passwordHasher = passwordHasher;
     }
 
     @Transactional
@@ -19,7 +20,7 @@ public class UserService {
             throw new EmailAlreadyInUseException();
         }
 
-        String passwordHash = BcryptUtil.bcryptHash(request.getPassword());
+        String passwordHash = passwordHasher.hash(request.getPassword());
 
         User user = new User(request.getEmail(), passwordHash, "user");
 
